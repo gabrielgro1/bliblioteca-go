@@ -1,0 +1,1408 @@
+MANUAL DE APRENDIZADO - PROJETO BIBLIOTECA EM GO
+=================================================
+
+Este manual resume, em ordem cronologica, tudo que foi aprendido no projeto
+Biblioteca. A ideia nao e decorar codigo pronto, mas entender o papel de cada
+parte: struct, package, import, repository, service, handler, funcoes,
+parametros, retornos, if, range, ponteiros e leitura do terminal.
+
+
+1. IDEIA INICIAL DO PROJETO
+---------------------------
+
+O programa nasceu como um menu simples no terminal:
+
+1. Cadastrar livro
+2. Listar livros
+3. Buscar livros
+4. Marcar como lido
+5. Deletar livro
+0. Sair
+
+No inicio, tudo ficava dentro do main.go. Isso funciona para aprender o basico,
+mas o arquivo cresce rapido. Por isso fomos separando responsabilidades em
+camadas.
+
+Hoje a ideia geral e:
+
+main.go -> handler -> service -> repository -> domain
+
+main.go:
+  Monta as pecas do programa.
+
+handler:
+  Conversa com o usuario pelo terminal.
+
+service:
+  Guarda as regras do sistema.
+
+repository:
+  Guarda, busca, altera e deleta os dados em memoria.
+
+domain:
+  Define as estruturas principais do sistema.
+
+
+2. GO.MOD
+---------
+
+Criamos o arquivo go.mod:
+
+module biblioteca
+
+go 1.26
+
+O go.mod e a identidade do projeto Go.
+
+module biblioteca:
+  Define o nome raiz do projeto.
+
+Por isso podemos importar pacotes internos assim:
+
+import "biblioteca/domain"
+import "biblioteca/repository"
+import "biblioteca/service"
+import "biblioteca/handler"
+
+Sem o go.mod, o Go nao saberia que "biblioteca" e o nome do nosso projeto.
+
+go 1.26:
+  Indica a versao de referencia da linguagem Go usada pelo modulo.
+
+
+3. PACKAGE E IMPORT
+-------------------
+
+Cada pasta em Go normalmente representa um pacote.
+
+Exemplos:
+
+domain/book.go:
+  package domain
+
+repository/book_repo.go:
+  package repository
+
+service/book_service.go:
+  package service
+
+handler/handler.go:
+  package handler
+
+main.go:
+  package main
+
+package:
+  Diz a qual pacote aquele arquivo pertence.
+
+import:
+  Permite usar codigo de outro pacote.
+
+Exemplo:
+
+import "biblioteca/domain"
+
+Depois disso, podemos usar:
+
+domain.Book
+
+Isso significa:
+
+Pegue o tipo Book que esta dentro do pacote domain.
+
+
+4. LETRA MAIUSCULA E LETRA MINUSCULA EM GO
+------------------------------------------
+
+Em Go, maiuscula e minuscula importam muito.
+
+Book:
+  Nome publico. Pode ser usado por outros pacotes.
+
+book:
+  Nome privado. So pode ser usado dentro do mesmo pacote.
+
+Exemplo:
+
+type Book struct { ... }
+
+Como Book tem B maiusculo, outros pacotes podem usar:
+
+domain.Book
+
+Campos da struct tambem seguem essa regra:
+
+Id
+Title
+Author
+Year
+Read
+
+Como estao com letra maiuscula, podem ser acessados fora do pacote domain.
+
+
+5. PRIMEIRA STRUCT: DOMAIN.BOOK
+-------------------------------
+
+Criamos a struct Book no pacote domain:
+
+type Book struct {
+    Id     int
+    Title  string
+    Author string
+    Year   int
+    Read   bool
+}
+
+struct:
+  E um molde para criar valores com varios campos.
+
+Book:
+  Representa um livro no sistema.
+
+Id int:
+  Numero identificador do livro.
+
+Title string:
+  Titulo do livro.
+
+Author string:
+  Autor do livro.
+
+Year int:
+  Ano do livro.
+
+Read bool:
+  Informa se o livro foi lido ou nao.
+
+bool:
+  Tipo que aceita true ou false.
+
+Exemplo mental:
+
+domain.Book{
+    Id: 1,
+    Title: "Dom Casmurro",
+    Author: "Machado de Assis",
+    Year: 1899,
+    Read: false,
+}
+
+
+6. REPOSITORY: A CAIXA DOS LIVROS
+---------------------------------
+
+Depois criamos o pacote repository.
+
+O repository responde perguntas como:
+
+Como salvar um livro?
+Como listar livros?
+Como buscar livros?
+Como marcar como lido?
+Como deletar?
+
+Criamos:
+
+type BookRepo struct {
+    books  []domain.Book
+    nextId int
+}
+
+BookRepo:
+  Struct que guarda os livros em memoria.
+
+books []domain.Book:
+  Um slice de livros.
+
+[]domain.Book:
+  Uma lista de valores do tipo domain.Book.
+
+nextId int:
+  Guarda o proximo ID automatico.
+
+books esta com letra minuscula:
+  Isso significa que so o pacote repository mexe direto nessa lista.
+
+Isso e bom porque o resto do programa nao faz:
+
+repo.books = ...
+
+Em vez disso, usa funcoes:
+
+repo.Save(...)
+repo.List()
+repo.FindByTitle(...)
+
+
+7. SLICE
+--------
+
+Um slice e como uma lista flexivel.
+
+Exemplo:
+
+books []domain.Book
+
+Significa:
+
+books e uma lista de livros.
+
+Para adicionar em um slice, usamos append:
+
+r.books = append(r.books, book)
+
+append:
+  Cria uma nova versao do slice com o item adicionado.
+
+Por isso fazemos:
+
+r.books = append(...)
+
+Ou seja:
+
+Adicione o livro e guarde a nova lista de volta em r.books.
+
+
+8. NEWBOOKREPO
+--------------
+
+Criamos uma funcao para criar um repository novo:
+
+func NewBookRepo() *BookRepo {
+    return &BookRepo{
+        books:  []domain.Book{},
+        nextId: 1,
+    }
+}
+
+func:
+  Palavra usada para criar uma funcao.
+
+NewBookRepo:
+  Nome da funcao.
+
+() :
+  Ela nao recebe parametros.
+
+*BookRepo:
+  Ela retorna um ponteiro para BookRepo.
+
+return:
+  Devolve um valor para quem chamou a funcao.
+
+&BookRepo{...}:
+  Cria um BookRepo e devolve o endereco dele.
+
+Por que ponteiro?
+  Porque queremos trabalhar com o mesmo repository original, nao com copias.
+
+books: []domain.Book{}:
+  Comeca com uma lista vazia de livros.
+
+nextId: 1:
+  O primeiro livro cadastrado vai receber ID 1.
+
+
+9. PONTEIRO: O QUE SIGNIFICA *
+-----------------------------
+
+O simbolo * aparece assim:
+
+*BookRepo
+*BookService
+*Handler
+
+Ele significa:
+
+Ponteiro para esse tipo.
+
+Ou seja:
+
+Em vez de copiar a struct inteira, o Go passa uma referencia/endereco dela.
+
+Isso importa quando queremos alterar dados reais.
+
+Exemplo:
+
+func (r *BookRepo) Save(book domain.Book)
+
+O r e um ponteiro para BookRepo.
+
+Isso permite alterar:
+
+r.books
+r.nextId
+
+Se fosse uma copia, algumas alteracoes poderiam nao permanecer como esperado.
+
+Regra mental:
+
+Se o metodo altera a struct ou representa um objeto importante do sistema,
+normalmente usamos ponteiro.
+
+
+10. RECEIVER: R, S E H
+---------------------
+
+Aprendemos metodos com receiver:
+
+func (r *BookRepo) Save(book domain.Book)
+
+Esse trecho:
+
+(r *BookRepo)
+
+significa:
+
+Esta funcao pertence ao BookRepo.
+Dentro dela, vou chamar esse BookRepo de r.
+
+r:
+  Nome curto para repository.
+
+s:
+  Nome curto para service.
+
+h:
+  Nome curto para handler.
+
+Exemplos:
+
+func (r *BookRepo) Save(...)
+  r representa o repository atual.
+
+func (s *BookService) CreateBook(...)
+  s representa o service atual.
+
+func (h *Handler) Run()
+  h representa o handler atual.
+
+Esses nomes poderiam ser maiores:
+
+repo
+service
+handler
+
+Mas em Go e comum usar nomes curtos em metodos.
+
+Importante:
+
+r.books:
+  Acessa o campo books dentro do repository atual.
+
+s.repo:
+  Acessa o repository guardado dentro do service atual.
+
+h.reader:
+  Acessa o reader guardado dentro do handler atual.
+
+h.service:
+  Acessa o service guardado dentro do handler atual.
+
+
+11. SAVE
+--------
+
+No repository criamos:
+
+func (r *BookRepo) Save(book domain.Book) {
+    book.Id = r.nextId
+    r.nextId++
+    r.books = append(r.books, book)
+}
+
+func:
+  Cria uma funcao/metodo.
+
+(r *BookRepo):
+  O metodo pertence ao BookRepo.
+
+Save:
+  Nome do metodo.
+
+book domain.Book:
+  Parametro. A funcao recebe um livro chamado book.
+
+book.Id = r.nextId:
+  Coloca no livro o proximo ID disponivel.
+
+r.nextId++:
+  Aumenta o proximo ID em 1.
+
+++:
+  Atalho para somar 1.
+
+r.books = append(r.books, book):
+  Adiciona o livro na lista.
+
+
+12. LIST
+--------
+
+Criamos:
+
+func (r *BookRepo) List() []domain.Book {
+    return r.books
+}
+
+List:
+  Devolve todos os livros.
+
+[]domain.Book:
+  A funcao retorna uma lista de livros.
+
+return r.books:
+  Devolve a lista guardada dentro do repository.
+
+
+13. LEN
+-------
+
+No menu de listagem usamos:
+
+if len(livros) == 0 {
+    fmt.Println("Nenhum livro cadastrado.")
+    continue
+}
+
+len(livros):
+  Retorna o tamanho do slice.
+
+Ele nao percorre a lista.
+Ele so diz quantos itens existem.
+
+len(livros) == 0:
+  Verifica se a lista esta vazia.
+
+==:
+  Operador de comparacao.
+
+Ele pergunta:
+
+Isso e igual a isso?
+
+
+14. RANGE
+---------
+
+Para listar livros, usamos:
+
+for _, livro := range livros {
+    fmt.Println(livro.Title)
+}
+
+range:
+  Percorre uma colecao.
+
+Em um slice, range devolve:
+
+indice, valor
+
+Exemplo:
+
+for indice, livro := range livros
+
+indice:
+  Posicao do item.
+
+livro:
+  Valor atual.
+
+Quando nao queremos o indice, usamos _:
+
+for _, livro := range livros
+
+_:
+  Significa: ignore esse valor.
+
+
+15. FIND BY TITLE
+-----------------
+
+No repository:
+
+func (r *BookRepo) FindByTitle(title string) (domain.Book, bool) {
+    for _, book := range r.books {
+        if strings.EqualFold(book.Title, title) {
+            return book, true
+        }
+    }
+
+    return domain.Book{}, false
+}
+
+title string:
+  Parametro recebido pela funcao.
+
+(domain.Book, bool):
+  A funcao retorna dois valores:
+  1. Um livro
+  2. Um bool dizendo se encontrou
+
+for _, book := range r.books:
+  Percorre todos os livros.
+
+strings.EqualFold(book.Title, title):
+  Compara textos ignorando maiuscula/minuscula.
+
+if:
+  Executa um bloco somente se a condicao for verdadeira.
+
+return book, true:
+  Se encontrou, devolve o livro e true.
+
+return domain.Book{}, false:
+  Se nao encontrou, devolve um Book vazio e false.
+
+domain.Book{}:
+  Um valor vazio da struct Book.
+
+
+16. IF
+------
+
+if significa "se".
+
+Exemplo:
+
+if title == "" {
+    return errors.New("Titulo e obrigatorio")
+}
+
+Lendo:
+
+Se title for vazio, devolva erro.
+
+Outro exemplo:
+
+if err != nil {
+    fmt.Println(err)
+    continue
+}
+
+!=:
+  Diferente de.
+
+nil:
+  Nada / ausencia de valor.
+
+err != nil:
+  Existe um erro.
+
+
+17. CONTINUE
+------------
+
+continue aparece dentro de loops.
+
+Ele significa:
+
+Pare esta volta atual do for e volte para o inicio do for.
+
+No nosso menu:
+
+if err != nil {
+    fmt.Println(err)
+    continue
+}
+
+Se deu erro, mostra a mensagem e volta para o menu.
+
+Por isso muitas vezes nao precisamos de else.
+
+Exemplo:
+
+if err != nil {
+    fmt.Println(err)
+    continue
+}
+
+fmt.Println("Deu certo")
+
+Se teve erro, o continue impede o codigo de chegar no "Deu certo".
+
+
+18. MARK AS READ
+----------------
+
+No repository:
+
+func (r *BookRepo) MarkAsRead(id int) bool {
+    for i := range r.books {
+        if r.books[i].Id == id {
+            r.books[i].Read = true
+            return true
+        }
+    }
+    return false
+}
+
+id int:
+  Parametro recebido. E o ID digitado pelo usuario.
+
+Id:
+  Campo da struct Book.
+
+id:
+  Parametro da funcao.
+
+Id e id sao diferentes.
+
+for i := range r.books:
+  Percorre o slice usando o indice.
+
+i:
+  Posicao atual no slice.
+
+r.books[i]:
+  Livro que esta na posicao i.
+
+Por que usar i aqui?
+  Porque queremos alterar o livro original dentro do slice.
+
+Se usasse:
+
+for _, book := range r.books
+
+book seria uma copia.
+Alterar book.Read nao alteraria o item original no slice.
+
+r.books[i].Read = true:
+  Marca o livro original como lido.
+
+return true:
+  Deu certo.
+
+return false:
+  Nao encontrou livro com esse ID.
+
+
+19. DELETE
+----------
+
+No repository:
+
+func (r *BookRepo) Delete(id int) bool {
+    for i := range r.books {
+        if r.books[i].Id == id {
+            r.books = append(r.books[:i], r.books[i+1:]...)
+            return true
+        }
+    }
+    return false
+}
+
+Essa funcao remove um livro pelo ID.
+
+r.books[:i]:
+  Pega tudo antes da posicao i.
+
+r.books[i+1:]:
+  Pega tudo depois da posicao i.
+
+append(r.books[:i], r.books[i+1:]...):
+  Junta a parte antes com a parte depois.
+
+O livro da posicao i fica de fora.
+
+...:
+  Espalha os itens do slice dentro do append.
+
+Exemplo:
+
+[livro1, livro2, livro3]
+
+Se i for 1:
+
+r.books[:i]    -> [livro1]
+r.books[i+1:]  -> [livro3]
+
+Resultado:
+
+[livro1, livro3]
+
+
+20. LEITURA DO TERMINAL
+-----------------------
+
+No comeco usamos fmt.Scan.
+
+Depois passamos para:
+
+reader.ReadString('\n')
+
+Por que?
+
+fmt.Scan:
+  Le por palavra/valor.
+  Se o usuario digitar "Machado de Assis", pode pegar so "Machado".
+
+ReadString('\n'):
+  Le a linha inteira ate o usuario apertar Enter.
+
+Exemplo:
+
+titulo, _ := h.reader.ReadString('\n')
+
+Isso le:
+
+"Dom Casmurro\n"
+
+O \n representa o Enter.
+
+Depois usamos:
+
+titulo = strings.TrimSpace(titulo)
+
+TrimSpace:
+  Remove espacos no inicio/fim e remove o \n do Enter.
+
+"Dom Casmurro\n" vira "Dom Casmurro".
+
+
+21. STRCONV.ATOI
+----------------
+
+Tudo que vem do terminal chega como texto.
+
+Mesmo se o usuario digitar:
+
+1899
+
+O Go le como:
+
+"1899"
+
+Mas o campo Year e int.
+
+Por isso usamos:
+
+ano, err := strconv.Atoi(anoTexto)
+
+Atoi:
+  Converte string para int.
+
+ano:
+  Numero convertido.
+
+err:
+  Erro caso a conversao falhe.
+
+Se o usuario digitar:
+
+abc
+
+Atoi nao consegue converter e err fica diferente de nil.
+
+
+22. ERROR
+---------
+
+Depois criamos regras no service usando error.
+
+Exemplo:
+
+func (s *BookService) CreateBook(title string, autor string, year int) error
+
+error:
+  Tipo usado para representar erro em Go.
+
+Quando da erro:
+
+return errors.New("Titulo e obrigatorio")
+
+Quando da certo:
+
+return nil
+
+nil:
+  Nao houve erro.
+
+No main/handler:
+
+err = h.service.CreateBook(titulo, autor, ano)
+if err != nil {
+    fmt.Println(err)
+    continue
+}
+
+Lendo:
+
+Chame CreateBook.
+Se voltou erro, mostre o erro e volte ao menu.
+Se voltou nil, continue normalmente.
+
+
+23. SERVICE
+-----------
+
+Criamos o pacote service.
+
+O service fica entre handler e repository.
+
+Handler:
+  Le dados do usuario.
+
+Service:
+  Valida regras e decide o que pode acontecer.
+
+Repository:
+  Guarda os dados.
+
+BookService:
+
+type BookService struct {
+    repo *repository.BookRepo
+}
+
+repo:
+  O service guarda um repository para poder salvar, listar, buscar etc.
+
+NewBookService:
+
+func NewBookService(repo *repository.BookRepo) *BookService {
+    return &BookService{
+        repo: repo,
+    }
+}
+
+Essa funcao cria um service novo recebendo um repository.
+
+
+24. CREATEBOOK NO SERVICE
+-------------------------
+
+Criamos:
+
+func (s *BookService) CreateBook(title string, autor string, year int) error {
+    if title == "" {
+        return errors.New("Titulo e obrigatorio")
+    }
+
+    if autor == "" {
+        return errors.New("autor obrigatorio")
+    }
+
+    if year <= 0 {
+        return errors.New("Ano invalido")
+    }
+
+    _, encontrado := s.repo.FindByTitle(title)
+    if encontrado {
+        return errors.New("livro ja cadastrado")
+    }
+
+    book := domain.Book{
+        Title:  title,
+        Author: autor,
+        Year:   year,
+        Read:   false,
+    }
+
+    s.repo.Save(book)
+    return nil
+}
+
+Essa foi uma funcao importante porque o repository nao tinha CreateBook.
+
+Repository tem:
+
+Save(book)
+
+Service tem:
+
+CreateBook(title, autor, year)
+
+Por que?
+
+Porque o service recebe os dados crus do usuario e monta um domain.Book.
+
+Tambem valida regras:
+
+Titulo nao pode ser vazio.
+Autor nao pode ser vazio.
+Ano precisa ser maior que zero.
+Livro nao pode ser repetido.
+
+Depois chama:
+
+s.repo.Save(book)
+
+Ou seja:
+
+O service decide se pode salvar.
+O repository salva.
+
+
+25. FUNCOES DO SERVICE QUE REPASSAM PARA O REPOSITORY
+-----------------------------------------------------
+
+Criamos:
+
+func (s *BookService) ListBooks() []domain.Book {
+    return s.repo.List()
+}
+
+func (s *BookService) FindByTitle(title string) (domain.Book, bool) {
+    return s.repo.FindByTitle(title)
+}
+
+No inicio, essas funcoes so repassam para o repository.
+
+Isso e normal.
+
+O objetivo e:
+
+handler -> service -> repository
+
+Mesmo se hoje o service apenas repassa, amanha ele pode ganhar regras.
+
+Exemplo:
+
+FindByTitle poderia validar titulo vazio.
+ListBooks poderia ordenar os livros.
+
+
+26. MARKASREAD E DELETE NO SERVICE COM ERROR
+--------------------------------------------
+
+No service, mudamos MarkAsRead e Delete para retornar error.
+
+Exemplo:
+
+func (s *BookService) MarkAsRead(id int) error {
+    if id <= 0 {
+        return errors.New("Id invalido")
+    }
+
+    marcado := s.repo.MarkAsRead(id)
+    if !marcado {
+        return errors.New("Livro nao encontrado")
+    }
+
+    return nil
+}
+
+Aqui o service adiciona regra:
+
+ID precisa ser maior que zero.
+
+Se o repository nao encontrou:
+
+return errors.New("Livro nao encontrado")
+
+Se deu certo:
+
+return nil
+
+Assim o handler pode fazer:
+
+err = h.service.MarkAsRead(id)
+if err != nil {
+    fmt.Println(err)
+    continue
+}
+
+
+27. HANDLER
+-----------
+
+Criamos o pacote handler.
+
+O handler cuida do terminal:
+
+Mostrar menu.
+Ler opcao.
+Ler titulo, autor, ano e ID.
+Mostrar mensagens.
+Chamar o service.
+
+Criamos:
+
+type Handler struct {
+    service *service.BookService
+    reader  *bufio.Reader
+}
+
+service:
+  O handler guarda o service para chamar as regras.
+
+reader:
+  O handler guarda o leitor do terminal.
+
+NewHandler:
+
+func NewHandler(service *service.BookService) *Handler {
+    return &Handler{
+        service: service,
+        reader:  bufio.NewReader(os.Stdin),
+    }
+}
+
+NewHandler cria um handler novo.
+
+Ele recebe o service e cria um reader para ler o terminal.
+
+
+28. RUN NO HANDLER
+------------------
+
+O Run e o metodo que roda o menu:
+
+func (h *Handler) Run() {
+    var opcao string
+
+    for {
+        ...
+    }
+}
+
+h:
+  O handler atual.
+
+h.service:
+  Service guardado dentro do handler.
+
+h.reader:
+  Reader guardado dentro do handler.
+
+Run:
+  Nome do metodo que inicia o menu.
+
+for:
+  Loop infinito.
+
+O menu fica repetindo ate o usuario escolher 0.
+
+Quando o usuario escolhe 0:
+
+return
+
+return dentro do Run:
+  Encerra a funcao Run.
+
+Como Run foi chamada pelo main, o programa termina.
+
+
+29. MAIN.GO DEPOIS DO HANDLER
+-----------------------------
+
+O main.go ficou pequeno:
+
+func main() {
+    repo := repository.NewBookRepo()
+    bookService := service.NewBookService(repo)
+    menuHandler := handler.NewHandler(bookService)
+
+    menuHandler.Run()
+}
+
+repo := repository.NewBookRepo():
+  Cria a camada de dados.
+
+bookService := service.NewBookService(repo):
+  Cria a camada de regras usando o repository.
+
+menuHandler := handler.NewHandler(bookService):
+  Cria a camada de terminal usando o service.
+
+menuHandler.Run():
+  Inicia o programa.
+
+Esse e o fluxo completo:
+
+main -> handler -> service -> repository -> domain
+
+
+30. RETURN
+----------
+
+return serve para devolver algo ou encerrar uma funcao.
+
+Exemplo com valor:
+
+return r.books
+
+Devolve a lista de livros.
+
+Exemplo com dois valores:
+
+return book, true
+
+Devolve um livro e true.
+
+Exemplo com erro:
+
+return errors.New("Ano invalido")
+
+Devolve um erro.
+
+Exemplo sem erro:
+
+return nil
+
+Devolve ausencia de erro.
+
+Exemplo para sair:
+
+return
+
+Sai da funcao atual.
+
+
+31. VARIAVEIS E :=
+-----------------
+
+Criamos variaveis assim:
+
+var opcao string
+
+Isso declara a variavel sem valor inicial especifico.
+
+Tambem usamos:
+
+titulo, _ := h.reader.ReadString('\n')
+
+:=:
+  Cria uma nova variavel e atribui valor.
+
+=:
+  Atribui valor a uma variavel que ja existe.
+
+Exemplo:
+
+opcao, _ = h.reader.ReadString('\n')
+
+Aqui usamos = porque opcao ja foi criada antes:
+
+var opcao string
+
+
+32. O UNDERLINE _
+----------------
+
+O _ significa:
+
+Estou recebendo esse valor, mas quero ignorar.
+
+Exemplo:
+
+titulo, _ := h.reader.ReadString('\n')
+
+ReadString retorna:
+
+texto, erro
+
+Como no inicio ignoramos o erro de leitura, usamos _.
+
+Outro exemplo:
+
+_, encontrado := s.repo.FindByTitle(title)
+
+FindByTitle retorna:
+
+livro, encontrado
+
+Nesse caso nao precisamos do livro, so queremos saber se encontrou.
+
+Por isso:
+
+_ recebe o livro e ignora.
+
+
+33. PRINT, PRINTLN E PRINTF
+---------------------------
+
+fmt.Print:
+  Imprime sem pular linha.
+
+fmt.Println:
+  Imprime e pula linha.
+
+fmt.Printf:
+  Imprime com formatacao.
+
+Exemplo:
+
+fmt.Print("Digite uma opcao: ")
+
+Aqui faz sentido nao pular linha, porque o usuario digita na mesma linha.
+
+Exemplo:
+
+fmt.Println("Livro cadastrado!")
+
+Aqui faz sentido pular linha.
+
+Quando usamos Printf sem \n, a proxima mensagem pode ficar grudada.
+
+
+34. IMPORTS USADOS
+------------------
+
+fmt:
+  Mostrar mensagens no terminal.
+
+bufio:
+  Criar reader para ler linhas inteiras.
+
+os:
+  Acessar os.Stdin, a entrada do terminal.
+
+strings:
+  Usar TrimSpace e EqualFold.
+
+strconv:
+  Converter string para int com Atoi.
+
+errors:
+  Criar erros com errors.New.
+
+biblioteca/domain:
+  Usar domain.Book.
+
+biblioteca/repository:
+  Usar BookRepo.
+
+biblioteca/service:
+  Usar BookService.
+
+biblioteca/handler:
+  Usar Handler.
+
+
+35. GOFMT
+---------
+
+gofmt arruma a formatacao do codigo Go.
+
+Comando:
+
+gofmt -w main.go handler/handler.go service/book_service.go repository/book_repo.go domain/book.go
+
+-w:
+  Escreve a formatacao nos arquivos.
+
+gofmt nao muda a logica.
+Ele arruma espacos, imports e indentacao.
+
+
+36. O QUE AINDA NAO E BANCO DE DADOS
+------------------------------------
+
+Por enquanto, os livros ficam em memoria:
+
+books []domain.Book
+
+Isso significa:
+
+Enquanto o programa esta aberto, os livros existem.
+Quando fecha o programa, os dados somem.
+
+Ainda nao entramos em SQL/banco de dados.
+
+Antes de SQL, aprendemos:
+
+packages
+imports
+structs
+slices
+funcoes
+metodos
+ponteiros
+if
+return
+error
+handler
+service
+repository
+
+
+37. RESUMO FINAL DA ARQUITETURA
+-------------------------------
+
+domain:
+  Define o que e um livro.
+
+repository:
+  Guarda os livros em memoria.
+  Gera ID.
+  Lista, busca, marca como lido e deleta.
+
+service:
+  Aplica regras.
+  Cria Book a partir de title, autor e year.
+  Impede dados invalidos.
+  Impede livro repetido.
+  Chama repository.
+
+handler:
+  Mostra menu.
+  Le dados do usuario.
+  Converte ano e ID.
+  Mostra mensagens.
+  Chama service.
+
+main:
+  Monta tudo e inicia o handler.
+
+Fluxo:
+
+Usuario
+  -> Handler
+  -> Service
+  -> Repository
+  -> Domain/Book
+
+
+38. FRASE GUIA PARA LEMBRAR
+---------------------------
+
+Se for entrada ou saida no terminal:
+  handler
+
+Se for regra do sistema:
+  service
+
+Se for guardar, buscar, alterar ou deletar dados:
+  repository
+
+Se for o formato principal dos dados:
+  domain
+
+Se for montar e iniciar o programa:
+  main
+
+
+39. PROXIMOS PASSOS NATURAIS
+----------------------------
+
+1. Quebrar o Run em funcoes menores:
+   handleCreateBook
+   handleListBooks
+   handleFindBook
+   handleMarkAsRead
+   handleDeleteBook
+
+2. Melhorar mensagens e nomes:
+   Biblioteca
+   Titulo
+   Autor
+   Ano
+
+3. Aprender interfaces:
+   Para o service depender de uma interface, nao diretamente do BookRepo.
+
+4. Depois, quando chegar a hora:
+   Trocar repository em memoria por arquivo ou SQL.
+
+Quando entrarmos em SQL, isso sera uma nova fase.
+
+
+FIM DO MANUAL
+=============
+
+Este projeto ja ensinou uma base muito forte de Go: como organizar codigo,
+como uma camada chama outra, como usar parametros e retornos, como trabalhar
+com structs e slices, e como separar terminal, regra e dados.
