@@ -5,19 +5,19 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"strings"
 	"strconv"
+	"strings"
 )
 
 type Handler struct {
 	service *service.BookService
-	reader *bufio.Reader
+	reader  *bufio.Reader
 }
- 
-func NewHandler (service *service.BookService) *Handler {
+
+func NewHandler(service *service.BookService) *Handler {
 	return &Handler{
 		service: service,
-		reader: bufio.NewReader(os.Stdin),
+		reader:  bufio.NewReader(os.Stdin),
 	}
 }
 
@@ -37,33 +37,9 @@ func (h *Handler) Run() {
 		opcao = strings.TrimSpace(opcao)
 
 		switch opcao {
+
 		case "1":
-			fmt.Print("Titulo: ")
-			titulo, _ := h.reader.ReadString('\n')
-			titulo = strings.TrimSpace(titulo)
-
-			fmt.Print("Autor: ")
-			autor, _ := h.reader.ReadString('\n')
-			autor = strings.TrimSpace(autor)
-
-			fmt.Print("Ano: ")
-			anoTexto, _ := h.reader.ReadString('\n')
-			anoTexto = strings.TrimSpace(anoTexto)
-
-			ano, err := strconv.Atoi(anoTexto)
-
-			if err != nil {
-				fmt.Println("Ano invalido!")
-				continue
-			}
-
-			err = h.service.CreateBook(titulo, autor, ano)
-			if err != nil {
-				fmt.Println(err)
-				continue
-			}
-
-			fmt.Println("Livro cadastrado!")
+			h.handleCreateBook()
 
 		case "2":
 			livros := h.service.ListBooks()
@@ -107,7 +83,7 @@ func (h *Handler) Run() {
 
 			id, err := strconv.Atoi(idTexto)
 			if err != nil {
-				fmt.Print("Id invalido")
+				fmt.Println("Id invalido")
 				continue
 
 			}
@@ -115,7 +91,7 @@ func (h *Handler) Run() {
 			err = h.service.MarkAsRead(id)
 
 			if err != nil {
-				fmt.Print(err)
+				fmt.Println(err)
 				continue
 			}
 
@@ -154,4 +130,30 @@ func (h *Handler) Run() {
 	}
 }
 
+func (h *Handler) handleCreateBook() {
+	fmt.Print("Titulo: ")
+	titulo, _ := h.reader.ReadString('\n')
+	titulo = strings.TrimSpace(titulo)
 
+	fmt.Print("Autor: ")
+	autor, _ := h.reader.ReadString('\n')
+	autor = strings.TrimSpace(autor)
+
+	fmt.Print("Ano: ")
+	anoTexto, _ := h.reader.ReadString('\n')
+	anoTexto = strings.TrimSpace(anoTexto)
+
+	ano, err := strconv.Atoi(anoTexto)
+	if err != nil {
+		fmt.Println("Ano invalido!")
+		return
+	}
+
+	err = h.service.CreateBook(titulo, autor, ano)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Println("Livro cadastrado!")
+}
