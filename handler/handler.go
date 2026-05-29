@@ -42,80 +42,18 @@ func (h *Handler) Run() {
 			h.handleCreateBook()
 
 		case "2":
-			livros := h.service.ListBooks()
+			h.ListBooks()
 
-			if len(livros) == 0 {
-
-				fmt.Println("Nenhum livro cadastrado.")
-				continue
-			}
-			for _, livro := range livros {
-				fmt.Println("-------------------")
-				fmt.Println("ID", livro.Id)
-				fmt.Println("Titulo", livro.Title)
-				fmt.Println("Autor", livro.Author)
-				fmt.Println("Year", livro.Year)
-				fmt.Println("Lido", livro.Read)
-
-			}
+			
 		case "3":
-			fmt.Println("Digite o titulo: ")
-			titulo, _ := h.reader.ReadString('\n')
-			titulo = strings.TrimSpace(titulo)
-
-			livro, encontrado := h.service.FindByTitle(titulo)
-
-			if !encontrado {
-				fmt.Println("Livro não encontrado: ")
-				continue
-			}
-			fmt.Println("Livro encontrado")
-			fmt.Println("Id", livro.Id)
-			fmt.Println("Titulo", livro.Title)
-			fmt.Println("Autor", livro.Author)
-			fmt.Println("Year", livro.Year)
-			fmt.Println("Lido", livro.Read)
+			h.handleFindBook()
 
 		case "4":
-			fmt.Println("Digite o ID do livro: ")
-			idTexto, _ := h.reader.ReadString('\n')
-			idTexto = strings.TrimSpace(idTexto)
+			h.handleMarkAsRead()
 
-			id, err := strconv.Atoi(idTexto)
-			if err != nil {
-				fmt.Println("Id invalido")
-				continue
-
-			}
-
-			err = h.service.MarkAsRead(id)
-
-			if err != nil {
-				fmt.Println(err)
-				continue
-			}
-
-			fmt.Println("Livro marcado como lido!")
 		case "5":
-			fmt.Println("Digite o ID pra poder deletar")
-			idtexto, _ := h.reader.ReadString('\n')
-			idtexto = strings.TrimSpace(idtexto)
+			h.handlerDeleteBook()
 
-			id, err := strconv.Atoi(idtexto)
-			if err != nil {
-				fmt.Println("ID invalido")
-				continue
-			}
-
-			err = h.service.Delete(id)
-
-			if err != nil {
-				fmt.Println(err)
-				continue
-
-			}
-
-			fmt.Println("Livro deletado!")
 
 		case "0":
 			fmt.Println("Saindo...")
@@ -123,7 +61,7 @@ func (h *Handler) Run() {
 		default:
 			fmt.Println()
 			fmt.Println("Opção invalida!")
-			fmt.Print("Presione Enter para continuar...")
+			fmt.Println("Presione Enter para continuar...")
 			h.reader.ReadString('\n')
 		}
 
@@ -148,7 +86,7 @@ func (h *Handler) handleCreateBook() {
 		fmt.Println("Ano invalido!")
 		return
 	}
-
+}
 	err = h.service.CreateBook(titulo, autor, ano)
 	if err != nil {
 		fmt.Println(err)
@@ -156,4 +94,84 @@ func (h *Handler) handleCreateBook() {
 	}
 
 	fmt.Println("Livro cadastrado!")
+
+func (h *Handler) handleListBooks() 
+	livros := h.service.ListBooks()
+	if len(livros) == 0 {
+		fmt.Println("Nenhum livro cadastrado.")
+		return
+			}
+
+	for _, livro := range livros {
+				fmt.Println("-------------------")
+				fmt.Println("ID", livro.Id)
+				fmt.Println("Titulo", livro.Title)
+				fmt.Println("Autor", livro.Author)
+				fmt.Println("Year", livro.Year)
+				fmt.Println("Lido", livro.Read)
+
+	}
+
+func (h.*Handler) MarkFindBook() {
+	fmt.Println("Digite o titulo: ")
+			titulo, _ := h.reader.ReadString('\n')
+			titulo = strings.TrimSpace(titulo)
+
+			livro, encontrado := h.service.FindByTitle(titulo)
+
+			if !encontrado {
+				fmt.Println("Livro não encontrado: ")
+				continue
+			}
+			fmt.Println("Livro encontrado")
+			fmt.Println("Id", livro.Id)
+			fmt.Println("Titulo", livro.Title)
+			fmt.Println("Autor", livro.Author)
+			fmt.Println("Year", livro.Year)
+			fmt.Println("Lido", livro.Read)
+}	
+
+func (h *Handler) MarkAsRead() {
+	fmt.Println("Digite o ID do livro: ")
+			idTexto, _ := h.reader.ReadString('\n')
+			idTexto = strings.TrimSpace(idTexto)
+
+			id, err := strconv.Atoi(idTexto)
+			if err != nil {
+				fmt.Println("Id invalido")
+				return
+
+			}
+
+			err = h.service.MarkAsRead(id)
+
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			fmt.Println("Livro marcado como lido!")
+		}
+func (h *Handler) handlerDeleteBook() {
+	fmt.Println("Digite o ID pra poder deletar")
+			idtexto, _ := h.reader.ReadString('\n')
+			idtexto = strings.TrimSpace(idtexto)
+
+			id, err := strconv.Atoi(idtexto)
+			if err != nil {
+				fmt.Println("ID invalido")
+				continue
+			}
+
+			err = h.service.Delete(id)
+
+			if err != nil {
+				fmt.Println(err)
+				return
+									
+		
+			fmt.Println("Livro deletado!")
+
+}
+
 }
