@@ -44,7 +44,6 @@ func (h *Handler) Run() {
 		case "2":
 			h.handleListBooks()
 
-			
 		case "3":
 			h.handleFindBook()
 
@@ -53,7 +52,6 @@ func (h *Handler) Run() {
 
 		case "5":
 			h.handleDeleteBook()
-
 
 		case "0":
 			fmt.Println("Saindo...")
@@ -69,14 +67,10 @@ func (h *Handler) Run() {
 }
 
 func (h *Handler) handleCreateBook() {
-	titulo := h.readline("Titulo: ")
-	fmt.Print("Autor: ")
-	autor, _ := h.reader.ReadString('\n')
-	autor = strings.TrimSpace(autor)
+	titulo := h.readLine("Titulo: ")
+	autor := h.readLine("Autor: ")
 
-	fmt.Print("Ano: ")
-	anoTexto, _ := h.reader.ReadString('\n')
-	anoTexto = strings.TrimSpace(anoTexto)
+	anoTexto := h.readLine("Ano: ")
 
 	ano, err := strconv.Atoi(anoTexto)
 	if err != nil {
@@ -93,92 +87,83 @@ func (h *Handler) handleCreateBook() {
 	fmt.Println("Livro cadastrado!")
 }
 
-func (h *Handler) handleListBooks() { 
+func (h *Handler) handleListBooks() {
 	livros := h.service.ListBooks()
 	if len(livros) == 0 {
 		fmt.Println("Nenhum livro cadastrado.")
 		return
-			}
+	}
 
 	for _, livro := range livros {
-				fmt.Println("-------------------")
-				fmt.Println("ID", livro.Id)
-				fmt.Println("Titulo", livro.Title)
-				fmt.Println("Autor", livro.Author)
-				fmt.Println("Year", livro.Year)
-				fmt.Println("Lido", livro.Read)
+		fmt.Println("-------------------")
+		fmt.Println("ID", livro.Id)
+		fmt.Println("Titulo", livro.Title)
+		fmt.Println("Autor", livro.Author)
+		fmt.Println("Year", livro.Year)
+		fmt.Println("Lido", livro.Read)
 
 	}
 }
 
 func (h *Handler) handleFindBook() {
-	fmt.Println("Digite o titulo: ")
-			titulo, _ := h.reader.ReadString('\n')
-			titulo = strings.TrimSpace(titulo)
+	titulo := h.readLine("Digite o titulo: ")
 
-			livro, encontrado := h.service.FindByTitle(titulo)
+	livro, encontrado := h.service.FindByTitle(titulo)
 
-			if !encontrado {
-				fmt.Println("Livro não encontrado: ")
-				return
-			}
-			fmt.Println("Livro encontrado")
-			fmt.Println("Id", livro.Id)
-			fmt.Println("Titulo", livro.Title)
-			fmt.Println("Autor", livro.Author)
-			fmt.Println("Year", livro.Year)
-			fmt.Println("Lido", livro.Read)
-}	
+	if !encontrado {
+		fmt.Println("Livro não encontrado: ")
+		return
+	}
+	fmt.Println("Livro encontrado")
+	fmt.Println("Id", livro.Id)
+	fmt.Println("Titulo", livro.Title)
+	fmt.Println("Autor", livro.Author)
+	fmt.Println("Year", livro.Year)
+	fmt.Println("Lido", livro.Read)
+}
 
 func (h *Handler) handleMarkAsRead() {
-	fmt.Println("Digite o ID do livro: ")
-			idTexto, _ := h.reader.ReadString('\n')
-			idTexto = strings.TrimSpace(idTexto)
+	idTexto := h.readLine("Digite o ID do livro: ")
 
-			id, err := strconv.Atoi(idTexto)
-			if err != nil {
-				fmt.Println("Id invalido")
-				return
+	id, err := strconv.Atoi(idTexto)
+	if err != nil {
+		fmt.Println("Id invalido")
+		return
 
-			}
+	}
 
-			err = h.service.MarkAsRead(id)
+	err = h.service.MarkAsRead(id)
 
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
-			fmt.Println("Livro marcado como lido!")
-		}
+	fmt.Println("Livro marcado como lido!")
+}
 func (h *Handler) handleDeleteBook() {
-	fmt.Println("Digite o ID pra poder deletar")
-			idtexto, _ := h.reader.ReadString('\n')
-			idtexto = strings.TrimSpace(idtexto)
+	idTexto := h.readLine("Digite o ID pra poder deletar: ")
+	id, err := strconv.Atoi(idTexto)
+	if err != nil {
+		fmt.Println("ID invalido")
+		return
+	}
 
-			id, err := strconv.Atoi(idtexto)
-			if err != nil {
-				fmt.Println("ID invalido")
-				return
-			}
+	err = h.service.Delete(id)
 
-			err = h.service.Delete(id)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
-			if err != nil {
-				fmt.Println(err)
-				return
-			}										
-		
-			fmt.Println("Livro deletado!")
+	fmt.Println("Livro deletado!")
 
 }
 
-func (h *Handler) readline(message string) string {
-	fmt.Println(message)
+func (h *Handler) readLine(message string) string {
+	fmt.Print(message)
 
 	text, _ := h.reader.ReadString('\n')
 
 	return strings.TrimSpace(text)
 }
-
-
