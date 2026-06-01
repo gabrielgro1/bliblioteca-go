@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"biblioteca/domain"
 	"biblioteca/service"
 	"bufio"
 	"fmt"
@@ -95,13 +96,7 @@ func (h *Handler) handleListBooks() {
 	}
 
 	for _, livro := range livros {
-		fmt.Println("-------------------")
-		fmt.Println("ID", livro.Id)
-		fmt.Println("Titulo", livro.Title)
-		fmt.Println("Autor", livro.Author)
-		fmt.Println("Year", livro.Year)
-		fmt.Println("Lido", livro.Read)
-
+		printBook(livro)
 	}
 }
 
@@ -114,14 +109,9 @@ func (h *Handler) handleFindBook() {
 		fmt.Println("Livro não encontrado: ")
 		return
 	}
-	fmt.Println("Livro encontrado")
-	fmt.Println("Id", livro.Id)
-	fmt.Println("Titulo", livro.Title)
-	fmt.Println("Autor", livro.Author)
-	fmt.Println("Year", livro.Year)
-	fmt.Println("Lido", livro.Read)
-}
 
+	printBook(livro)
+}
 func (h *Handler) handleMarkAsRead() {
 	idTexto := h.readLine("Digite o ID do livro: ")
 
@@ -166,4 +156,13 @@ func (h *Handler) readLine(message string) string {
 	text, _ := h.reader.ReadString('\n')
 
 	return strings.TrimSpace(text)
+}
+
+func printBook(livro domain.Book) {
+	fmt.Println("----------------------")
+	fmt.Println("ID", livro.Id)
+	fmt.Println("Titulo", livro.Title)
+	fmt.Println("Author", livro.Author)
+	fmt.Println("Year", livro.Year)
+	fmt.Println("Lido", livro.Read)
 }
