@@ -23,19 +23,16 @@ func NewHandler(service *service.BookService) *Handler {
 }
 
 func (h *Handler) Run() {
-	var opcao string
-
 	for {
-		fmt.Println("=== Bliblioteca de livros ===")
+		fmt.Println("=== Biblioteca de livros ===")
 		fmt.Println("1. Cadastrar livro")
 		fmt.Println("2. Listar livros")
 		fmt.Println("3. Buscar livros")
 		fmt.Println("4. Marcar como lido")
 		fmt.Println("5. Deletar livro")
 		fmt.Println("0. Sair")
-		fmt.Print("Digite uma opção: ")
-		opcao, _ = h.reader.ReadString('\n')
-		opcao = strings.TrimSpace(opcao)
+
+		opcao := h.readLine("Digite uma opção: ")
 
 		switch opcao {
 
@@ -59,9 +56,8 @@ func (h *Handler) Run() {
 			return
 		default:
 			fmt.Println()
-			fmt.Println("Opção invalida!")
-			fmt.Println("Presione Enter para continuar...")
-			h.reader.ReadString('\n')
+			fmt.Println("Opção inválida!")
+			h.readLine("Pressione Enter para continuar...")
 		}
 
 	}
@@ -71,9 +67,7 @@ func (h *Handler) handleCreateBook() {
 	titulo := h.readLine("Titulo: ")
 	autor := h.readLine("Autor: ")
 
-	anoTexto := h.readLine("Ano: ")
-
-	ano, err := strconv.Atoi(anoTexto)
+	ano, err := h.readInt("Ano :")
 	if err != nil {
 		fmt.Println("Ano invalido!")
 		return
@@ -160,9 +154,20 @@ func (h *Handler) readLine(message string) string {
 
 func printBook(livro domain.Book) {
 	fmt.Println("----------------------")
-	fmt.Println("ID", livro.Id)
-	fmt.Println("Titulo", livro.Title)
-	fmt.Println("Author", livro.Author)
-	fmt.Println("Year", livro.Year)
-	fmt.Println("Lido", livro.Read)
+	fmt.Println("ID:", livro.Id)
+	fmt.Println("Título:", livro.Title)
+	fmt.Println("Autor:", livro.Author)
+	fmt.Println("Ano:", livro.Year)
+	fmt.Println("Lido:", livro.Read)
+}
+
+func (h *Handler) readInt  (message string) (int, error) {
+	texto := h.readLine(message)
+
+	numero, err := strconv.Atoi(texto)
+	if err != nil {
+		return 0, err
+	}
+
+	return numero, nil
 }
