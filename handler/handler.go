@@ -38,18 +38,22 @@ func (h *Handler) Run() {
 
 		case "1":
 			h.handleCreateBook()
+			h.pause()
 
 		case "2":
 			h.handleListBooks()
-
+			h.pause()
 		case "3":
 			h.handleFindBook()
+			h.pause()
 
 		case "4":
 			h.handleMarkAsRead()
+			h.pause()
 
 		case "5":
 			h.handleDeleteBook()
+			h.pause()
 
 		case "0":
 			fmt.Println("Saindo...")
@@ -57,7 +61,7 @@ func (h *Handler) Run() {
 		default:
 			fmt.Println()
 			fmt.Println("Opção inválida!")
-			h.readLine("Pressione Enter para continuar...")
+			h.pause()
 		}
 
 	}
@@ -67,7 +71,7 @@ func (h *Handler) handleCreateBook() {
 	titulo := h.readLine("Titulo: ")
 	autor := h.readLine("Autor: ")
 
-	ano, err := h.readInt("Ano :")
+	ano, err := h.readInt("Ano: ")
 	if err != nil {
 		fmt.Println("Ano invalido!")
 		return
@@ -107,13 +111,10 @@ func (h *Handler) handleFindBook() {
 	printBook(livro)
 }
 func (h *Handler) handleMarkAsRead() {
-	idTexto := h.readLine("Digite o ID do livro: ")
-
-	id, err := strconv.Atoi(idTexto)
+	id, err := h.readInt("Digite o ID do livro: ")
 	if err != nil {
-		fmt.Println("Id invalido")
+		fmt.Println("ID invalido")
 		return
-
 	}
 
 	err = h.service.MarkAsRead(id)
@@ -126,8 +127,7 @@ func (h *Handler) handleMarkAsRead() {
 	fmt.Println("Livro marcado como lido!")
 }
 func (h *Handler) handleDeleteBook() {
-	idTexto := h.readLine("Digite o ID pra poder deletar: ")
-	id, err := strconv.Atoi(idTexto)
+	id, err := h.readInt("Digite o ID pra poder deletar: ")
 	if err != nil {
 		fmt.Println("ID invalido")
 		return
@@ -161,7 +161,7 @@ func printBook(livro domain.Book) {
 	fmt.Println("Lido:", livro.Read)
 }
 
-func (h *Handler) readInt  (message string) (int, error) {
+func (h *Handler) readInt(message string) (int, error) {
 	texto := h.readLine(message)
 
 	numero, err := strconv.Atoi(texto)
@@ -170,4 +170,9 @@ func (h *Handler) readInt  (message string) (int, error) {
 	}
 
 	return numero, nil
+}
+
+func (h *Handler) pause() {
+	h.readLine("Pressione o Enter para continuar ....")
+	
 }
