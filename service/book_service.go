@@ -2,27 +2,38 @@ package service
 
 import (
 	"biblioteca/domain"
-	"biblioteca/repository"
 	"errors"
+	"strings"
 )
 
-type BookService struct {
-	repo *repository.BookRepo
+type BookRepository interface {
+	Save(book domain.Book)
+	List() []domain.Book
+	FindByTitle(title string) (domain.Book, bool)
+	MarkAsRead(id int) bool
+	Delete(id int) bool
 }
 
-func NewBookService(repo *repository.BookRepo) *BookService {
+type BookService struct {
+	repo BookRepository
+}
+
+func NewBookService(repo BookRepository) *BookService {
 	return &BookService{
 		repo: repo,
 	}
 }
 
 func (s *BookService) CreateBook(title string, autor string, year int) error {
+	title = strings.TrimSpace(title)
+	autor = strings.TrimSpace(autor)
+	
 	if title == "" {
 		return errors.New("Titulo é obrigatorio")
 	}
 
 	if autor == "" {
-		return errors.New("autor obrigatorio")
+		return errors.New("Autor obrigatorio")
 	}
 
 	if year <= 0 {
@@ -31,7 +42,7 @@ func (s *BookService) CreateBook(title string, autor string, year int) error {
 
 	_, encontrado := s.repo.FindByTitle(title)
 	if encontrado {
-		return errors.New("livro ja cadastrado")
+		return errors.New("Livro ja cadastrado")
 	}
 	book := domain.Book{
 		Title:  title,
@@ -49,13 +60,18 @@ func (s *BookService) ListBooks() []domain.Book {
 }
 
 func (s *BookService) FindByTitle(title string) (domain.Book, bool) {
+	title = strings.TrimSpace(title)
+	if title == ""{
+		return domain.Book{}, false
+	}
+	
 	return s.repo.FindByTitle(title)
 
 }
 
 func (s *BookService) MarkAsRead(id int) error {
 	if id <= 0 {
-		return errors.New("Id invalido")
+		return errors.New("ID invalido")
 	}
 
 	marcado := s.repo.MarkAsRead(id)

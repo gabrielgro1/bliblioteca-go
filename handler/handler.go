@@ -24,13 +24,7 @@ func NewHandler(service *service.BookService) *Handler {
 
 func (h *Handler) Run() {
 	for {
-		fmt.Println("=== Biblioteca de livros ===")
-		fmt.Println("1. Cadastrar livro")
-		fmt.Println("2. Listar livros")
-		fmt.Println("3. Buscar livros")
-		fmt.Println("4. Marcar como lido")
-		fmt.Println("5. Deletar livro")
-		fmt.Println("0. Sair")
+		h.showMenu()
 
 		opcao := h.readLine("Digite uma opção: ")
 
@@ -94,7 +88,7 @@ func (h *Handler) handleListBooks() {
 	}
 
 	for _, livro := range livros {
-		printBook(livro)
+		h.printBook(livro)
 	}
 }
 
@@ -108,7 +102,7 @@ func (h *Handler) handleFindBook() {
 		return
 	}
 
-	printBook(livro)
+	h.printBook(livro)
 }
 func (h *Handler) handleMarkAsRead() {
 	id, err := h.readInt("Digite o ID do livro: ")
@@ -127,7 +121,7 @@ func (h *Handler) handleMarkAsRead() {
 	fmt.Println("Livro marcado como lido!")
 }
 func (h *Handler) handleDeleteBook() {
-	id, err := h.readInt("Digite o ID pra poder deletar: ")
+	id, err := h.readInt("Digite o ID do livro pra poder deletar: ")
 	if err != nil {
 		fmt.Println("ID invalido")
 		return
@@ -152,7 +146,7 @@ func (h *Handler) readLine(message string) string {
 	return strings.TrimSpace(text)
 }
 
-func printBook(livro domain.Book) {
+func (h *Handler) printBook(livro domain.Book) {
 	fmt.Println("----------------------")
 	fmt.Println("ID:", livro.Id)
 	fmt.Println("Título:", livro.Title)
@@ -173,6 +167,17 @@ func (h *Handler) readInt(message string) (int, error) {
 }
 
 func (h *Handler) pause() {
-	h.readLine("Pressione o Enter para continuar ....")
-	
+	h.readLine("Pressione Enter para continuar ....")
+
+}
+
+func (h *Handler) showMenu() {
+	fmt.Println("=== Biblioteca de livros ===")
+	fmt.Println("1. Cadastrar livro")
+	fmt.Println("2. Listar livros")
+	fmt.Println("3. Buscar livros")
+	fmt.Println("4. Marcar como lido")
+	fmt.Println("5. Deletar livro")
+	fmt.Println("0. Sair")
+
 }
