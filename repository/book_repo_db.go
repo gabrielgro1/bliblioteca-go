@@ -4,6 +4,7 @@ import (
 	"biblioteca/domain"
 	"database/sql"
 	_ "github.com/lib/pq"
+	
 )
 
 type BookRepoDB struct {
@@ -52,7 +53,7 @@ func (r *BookRepoDB) List() []domain.Book {
 	}
 
 	func (r *BookRepoDB) MarkAsRead(id int) bool {
-		result, err := r.db.Exec("UPDADE books SET read = true WHERE id = &1", id)
+		result, err := r.db.Exec("UPDATE books SET read = true WHERE id = $1", id)
 		if err != nil {
 			return false
 		}
