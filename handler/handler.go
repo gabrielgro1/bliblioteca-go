@@ -37,15 +37,20 @@ func (h *Handler) Run() {
 		case "2":
 			h.handleListBooks()
 			h.pause()
+
 		case "3":
-			h.handleFindBook()
+			h.handleListUnread()
 			h.pause()
 
 		case "4":
-			h.handleMarkAsRead()
+			h.handleFindBook()
 			h.pause()
 
 		case "5":
+			h.handleMarkAsRead()
+			h.pause()
+
+		case "6":
 			h.handleDeleteBook()
 			h.pause()
 
@@ -91,6 +96,17 @@ func (h *Handler) handleListBooks() {
 		h.printBook(livro)
 	}
 }
+func (h *Handler) handleListUnread() {
+	livros := h.service.ListUnread()
+	if len(livros) == 0{
+		fmt.Println("Nenhum livro não lido")
+		return
+	}
+	for _, livro := range livros {
+		h.printBook(livro)
+	}
+ }
+
 
 func (h *Handler) handleFindBook() {
 	titulo := h.readLine("Digite o titulo: ")
@@ -175,9 +191,10 @@ func (h *Handler) showMenu() {
 	fmt.Println("=== Biblioteca de livros ===")
 	fmt.Println("1. Cadastrar livro")
 	fmt.Println("2. Listar livros")
-	fmt.Println("3. Buscar livros")
-	fmt.Println("4. Marcar como lido")
-	fmt.Println("5. Deletar livro")
+	fmt.Println("3. Listar não lidos")
+	fmt.Println("4. Buscar livros")
+	fmt.Println("5. Marcar como lido")
+	fmt.Println("6. Deletar livro")
 	fmt.Println("0. Sair")
 
 }

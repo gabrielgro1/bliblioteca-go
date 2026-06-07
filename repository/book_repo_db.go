@@ -69,3 +69,18 @@ func (r *BookRepoDB) List() []domain.Book {
 		rows, _ := result.RowsAffected()
 		return rows > 0
 	}
+	func(r *BookRepoDB) ListUnread() []domain.Book {
+		rows, err := r.db.Query("SELECT id, title, author, year, read FROM books WHERE read = false")
+		if err != nil {
+			return nil
+		}
+		defer rows.Close()
+		
+		var books []domain.Book
+		for rows.Next() {
+			var b domain.Book
+			rows.Scan(&b.Id, &b.Title, &b.Author, &b.Year, &b.Read)
+			books = append(books, b)
+		}
+		return books
+	}

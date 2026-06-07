@@ -9,9 +9,11 @@ import (
 type BookRepository interface {
 	Save(book domain.Book)
 	List() []domain.Book
+	ListUnread() []domain.Book
 	FindByTitle(title string) (domain.Book, bool)
 	MarkAsRead(id int) bool
 	Delete(id int) bool
+
 }
 
 type BookService struct {
@@ -92,4 +94,9 @@ func (s *BookService) Delete(id int) error {
 		return errors.New("Livro não encontrado")
 	}
 	return nil
+
+}
+
+func (s *BookService) ListUnread() []domain.Book {
+	return s.repo.ListUnread()
 }
